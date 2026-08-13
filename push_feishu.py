@@ -20,6 +20,7 @@ import urllib.parse
 
 from PIL import Image
 import oss2
+from config import get_feishu_config, get_oss_config
 
 
 FEISHU_TOKEN_URL = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/'
@@ -37,20 +38,6 @@ def resize_image(file_path, scale=0.5):
     return tmp_path
 
 
-def load_env():
-    """从 .env 文件读取配置"""
-    env_path = os.path.join(os.path.dirname(__file__), '.env')
-    config = {}
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, value = line.split('=', 1)
-                    config[key.strip()] = value.strip()
-    return config
-
-
 def gen_sign(secret):
     """生成飞书 webhook 签名"""
     timestamp = str(int(time.time()))
@@ -60,11 +47,11 @@ def gen_sign(secret):
     return timestamp, sign
 
 
-def get_tenant_access_token(config):
+def get_tenant_access_token(feishu_config):
     """获取飞书 tenant_access_token"""
     payload = json.dumps({
-        'app_id': config['FEISHU_APP_ID'],
-        'app_secret': config['FEISHU_APP_SECRET']
+        'app_id': feishu_config['app_id'],
+        'app_secret': feishu_config['app_secret']
     }).encode('utf-8')
     req = urllib.request.Request(
         FEISHU_TOKEN_URL,
@@ -122,13 +109,13 @@ def upload_to_feishu(file_path, token):
     return result['data']['image_key'], None
 
 
-def create_oss_bucket(config):
-    """根据 .env 配置创建 OSS Bucket 实例"""
-    auth = oss2.Auth(config['OSS_ACCESS_KEY_ID'], config['OSS_ACCESS_KEY_SECRET'])
-    return oss2.Bucket(auth, config['OSS_ENDPOINT'], config['OSS_BUCKET_NAME'])
+def create_oss_bucket(oss_config):
+    """根据配置创建 OSS Bucket 实例"""
+    auth = oss2.Auth(oss_config['access_key_id'], oss_config['access_key_secret'])
+    return oss2.Bucket(auth, oss_config['endpoint'], oss_config['bucket_name'])
 
 
-def upload_to_oss(bucket, file_path, config):
+def upload_to_oss(bucket, file_path, oss_config):
     """上传图片到阿里云 OSS（公共读），返回直接访问 URL"""
     if not os.path.exists(file_path):
         return None, f'文件不存在: {file_path}'
@@ -139,7 +126,7 @@ def upload_to_oss(bucket, file_path, config):
 
     try:
         bucket.put_object_from_file(object_key, file_path, headers={'Content-Type': 'image/png'})
-        base_url = config['OSS_BASE_URL'].rstrip('/')
+        base_url = oss_config['base_url'].rstrip('/')
         url = f'{base_url}/{object_key}'
         return url, None
     except Exception as e:
@@ -321,19 +308,9 @@ def send_to_feishu(webhook_url, message, secret=None):
 def main():
     output_dir = os.path.join(os.path.dirname(__file__), 'output')
 
-    config = load_env()
-    webhook_url = config.get('FEISHU_WEBHOOK_URL')
-    secret = config.get('FEISHU_WEBHOOK_SECRET')
-
-    if not webhook_url:
-        print('错误: .env 中未配置 FEISHU_WEBHOOK_URL')
-        return
-
-    feishu_keys = ['FEISHU_APP_ID', 'FEISHU_APP_SECRET']
-    missing = [k for k in feishu_keys if not config.get(k)]
-    if missing:
-        print(f'错误: .env 中缺少飞书应用配置: {", ".join(missing)}')
-        return
+    feishu_config = get_feishu_config()
+    webhook_url = feishu_config['webhook_url']
+    secret = feishu_config['webhook_secret']
 
     md_files = sorted(glob.glob(os.path.join(output_dir, 'daily_report_*.md')))
     if not md_files:
@@ -353,7 +330,7 @@ def main():
 
     print('获取飞书 access_token ...', end=' ')
     try:
-        token = get_tenant_access_token(config)
+        token = get_tenant_access_token(feishu_config)
         print('✅')
     except Exception as e:
         print(f'❌ {e}')

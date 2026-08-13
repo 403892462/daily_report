@@ -7,21 +7,9 @@
 import os
 import pandas as pd
 import pyodbc
-from dotenv import load_dotenv
 from datetime import datetime
 from openpyxl.styles import Font, Alignment, numbers
-
-
-def load_env():
-    """加载环境变量"""
-    load_dotenv()
-    return {
-        'server': os.getenv('DB_SERVER'),
-        'port': os.getenv('DB_PORT', '1433'),
-        'user': os.getenv('DB_USER'),
-        'password': os.getenv('DB_PASSWORD'),
-        'database': os.getenv('DB_NAME', 'NewPOS_Dev')
-    }
+from config import get_db_config
 
 
 def fetch_pos_data(db_config, target_date, status=80):
@@ -276,7 +264,7 @@ def main():
     print("=" * 60)
     
     # 加载数据库配置
-    db_config = load_env()
+    db_config = get_db_config()
     
     # 定义查询时间（2026年7月31日，状态80）
     target_date = '2026-07-31'
