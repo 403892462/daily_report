@@ -2,26 +2,19 @@
 # -*- coding: utf-8 -*-
 """测试数据库连接 - 使用 pyodbc"""
 
-import os
 import pyodbc
-from dotenv import load_dotenv
+from config import get_db_config
 
-load_dotenv()
+db_config = get_db_config()
 
-server = os.getenv('DB_SERVER')
-port = os.getenv('DB_PORT', '1433')
-user = os.getenv('DB_USER')
-password = os.getenv('DB_PASSWORD')
-database = os.getenv('DB_NAME', 'NewPOS_Dev')
-
-print(f"服务器: {server}:{port}")
-print(f"用户: {user}")
-print(f"数据库: {database}")
+print(f"服务器: {db_config['server']}:{db_config['port']}")
+print(f"用户: {db_config['user']}")
+print(f"数据库: {db_config['database']}")
 print("正在连接...")
 
 try:
     # 使用旧版 SQL Server 驱动
-    conn_str = f"DRIVER={{SQL Server}};SERVER={server},{port};DATABASE={database};UID={user};PWD={password}"
+    conn_str = f"DRIVER={{SQL Server}};SERVER={db_config['server']},{db_config['port']};DATABASE={db_config['database']};UID={db_config['user']};PWD={db_config['password']}"
     conn = pyodbc.connect(conn_str, timeout=30)
     print("连接成功！")
     

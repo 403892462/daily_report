@@ -2,30 +2,23 @@
 # -*- coding: utf-8 -*-
 """测试数据库连接"""
 
-import os
 import pymssql
-from dotenv import load_dotenv
+from config import get_db_config
 
-load_dotenv()
+db_config = get_db_config()
 
-server = os.getenv('DB_SERVER')
-port = os.getenv('DB_PORT', '1433')
-user = os.getenv('DB_USER')
-password = os.getenv('DB_PASSWORD')
-database = os.getenv('DB_NAME', 'NewPOS_Dev')
-
-print(f"服务器: {server}:{port}")
-print(f"用户: {user}")
-print(f"数据库: {database}")
+print(f"服务器: {db_config['server']}:{db_config['port']}")
+print(f"用户: {db_config['user']}")
+print(f"数据库: {db_config['database']}")
 print("正在连接...")
 
 try:
     conn = pymssql.connect(
-        server=server,
-        port=port,
-        user=user,
-        password=password,
-        database=database,
+        server=db_config['server'],
+        port=db_config['port'],
+        user=db_config['user'],
+        password=db_config['password'],
+        database=db_config['database'],
         charset='utf8',
         login_timeout=10,
         timeout=30,
