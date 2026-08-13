@@ -1,0 +1,55 @@
+# ========================
+# Python 核心忽略规则
+# ========================
+# 字节码与缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境目录
+venv/
+env/
+.venv/
+
+# 构建与分发产物
+build/
+dist/
+*.egg-info/
+*.egg
+
+# 测试与覆盖率报告
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ========================
+# 敏感信息与配置
+# ========================
+# 环境变量文件（切勿将密码、API密钥提交到GitHub）
+.env
+.env.local
+*.secret
+
+
+# ========================
+# 常用工具与IDE配置
+# ========================
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
+
+
+# PyCharm / VS Code
+.idea/
+.vscode/
+
+# 操作系统生成的隐藏文件
+.DS_Store
+Thumbs.db
+
+# ========================
+# 日志与临时文件
+# ========================
+*.log
+logs/
+*.tmp
