@@ -7,7 +7,7 @@
 import os
 import pandas as pd
 import pyodbc
-from datetime import datetime
+from datetime import datetime, timedelta
 from openpyxl.styles import Font, Alignment, numbers
 from config import get_db_config
 
@@ -24,6 +24,7 @@ def fetch_pos_data(db_config, target_date, status=80):
     Returns:
         DataFrame: POS 销售数据
     """
+    next_date = (datetime.strptime(target_date, '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
     sql = f"""
     SELECT
         v.EntityCode,
@@ -35,7 +36,7 @@ def fetch_pos_data(db_config, target_date, status=80):
     FROM {db_config['database']}.dbo.RT_POSVoucher v
     INNER JOIN {db_config['database']}.dbo.RT_POSVoucherDetail d
         ON v.POSVoucherID = d.POSVoucherID
-    WHERE v.DocumentDate = '{target_date}'
+    WHERE v.DocumentDate >= '{target_date}' AND v.DocumentDate < '{next_date}'
         AND v.Status = {status}
     """
     
@@ -265,9 +266,9 @@ def main():
     
     # 加载数据库配置
     db_config = get_db_config()
-    
-    # 定义查询时间（2026年7月31日，状态80）
-    target_date = '2026-07-31'
+
+    # 默认取前一天的销售数据
+    target_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     # 拉取 POS 数据
     pos_df = fetch_pos_data(db_config, target_date)
