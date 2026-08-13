@@ -24,7 +24,7 @@ def _optional(keys, defaults=None):
     return {k: os.getenv(k, defaults.get(k, '')) for k in keys}
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 # ── 数据库配置 ──────────────────────────────────────────────
